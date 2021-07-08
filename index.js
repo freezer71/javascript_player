@@ -6,28 +6,51 @@ const sockVideos = document.querySelector('.sockVideos');
 const fullScreenBar=document.querySelector('.laBarDeLecturePosition');
 const controlBtn = document.querySelector('.controlBtn');
 const barDetemps = document.querySelector('.laBarDetemps');
-const imgButtonPlayer=document.querySelector('.imgButtonPlayer');
+const imgButtonPlayer = document.querySelector('.imgButtonPlayer');
 const sangRange = document.querySelector('.songRang');
-let i=1;
+const keyCodeName = {
+    keyF : 70,
+    keyEspace : 32,
+    keyArrowRight : 39,
+    keyArrowLeft : 37,
+    keyArrowUp : 38,
+    keyArrowDown : 40,
+    keyM : 77,
+}
+let fullScreen = false;
 
-    sangRange.addEventListener('change',()=>{
-        volumeVideo();
-        console.log(sangRange.value);
-        })
 
-    function volumeVideo(){
-        c=sangRange.value/100;
-        videos.volume=c;    
-    }
-    barDetemps.addEventListener('click',(e)=>{//la bar de temps clicable 
-        let z= barDetemps.getBoundingClientRect();
-        let a = (e.offsetX*100)/z.width;
-        let b =(a*videos.duration)/100;
-        videos.currentTime=b;
-        console.log(e);
-        
-    })    
-    btnPause.addEventListener('click',()=>{//button pause
+
+
+/**
+ * la bar de temps clicable 
+ */
+barDetemps.addEventListener('click',(e)=>updateTimeBar(e.offsetX));
+
+sangRange.addEventListener('change',()=>volumeVideo());
+
+window.addEventListener('keydown',(e)=>keyboardHandler(e.keyCode));
+
+/**
+ * button pause
+ */
+btnPause.addEventListener('click',() => videoPlayAndPause());
+
+/**
+ * bar de temps qui evolue sur la durrée
+ */
+videos.addEventListener('timeupdate',()=>updateTimeBarByVideoTime());
+
+const volumeVideo = () => videos.volume = parseInt(sangRange.value) / 100;
+
+const updateTimeBar = (mousePositionX) => {
+    let timeBarWidth= barDetemps.getBoundingClientRect().width;
+    let timeBarInPercentage = (mousePositionX * 100) / timeBarWidth;
+    let videoInPercentage =(timeBarInPercentage * videos.duration) /100;
+    videos.currentTime = videoInPercentage;
+}    
+
+const videoPlayAndPause = ()=>{
     if(videos.paused){
         videos.play();
         imgButtonPlayer.src='img/pauseButton.png'
@@ -40,17 +63,17 @@ let i=1;
         imgButtonPlayer.classList.toggle('imgButtonPause')
         imgButtonPlayer.classList.toggle('imgButtonPlayer')
     }
-    })
-    videos.addEventListener('timeupdate',()=>{//bar de temps qui evolue sur la durrée
-        let temps = (videos.currentTime*100)/videos.duration;
-        laBarDeLecture.style.width=temps+'%';
-        
-    })  
-    window.addEventListener('keydown',(e)=>{//input clavier
-        let x = e.keyCode;
-        console.log(e);
-        //console.log(e);
-        if (x==32){//pour mettre sur pause quand en appuis sur espase
+}
+
+const updateTimeBarByVideoTime = () => {
+    let time = (videos.currentTime * 100) / videos.duration;
+    laBarDeLecture.style.width = time + '%';
+}
+
+const keyboardHandler = (keyCode)=>{
+    switch(keyCode) {
+        case keyCodeName.keyEspace:
+            // pour mettre sur pause quand en appuis sur espase
             if(videos.paused){
                 videos.play();
                 imgButtonPlayer.src='img/pauseButton.png'
@@ -63,49 +86,50 @@ let i=1;
                 imgButtonPlayer.classList.toggle('imgButtonPause')
                 imgButtonPlayer.classList.toggle('imgButtonPlayer')
             }
-        }
-        if (x==37){
-            videos.currentTime=videos.currentTime-10;//-10s sur la videos quand en appuis sur les fleche
-        }
-        if (x==39){
-            videos.currentTime=videos.currentTime+10;//+10s sur la videos quand en appuis sur les fleche
+            break;
 
-        }
-        if(x==80){
-            console.log(sangRange.value);
-            /*if(sangRange.value==100){
-                sangRange.value=0;
-            }*/
-            //sangRange.value=0;    
-            sangRange.value=parseInt(sangRange.value)+10;
-           volumeVideo();
-            console.log(sangRange.value);
+        case keyCodeName.keyArrowLeft:
+            //-10s sur la videos quand en appuis sur les fleche
+            videos.currentTime=videos.currentTime-10;         
+            break;
+        
+        case keyCodeName.keyArrowRight:
+            //+10s sur la videos quand en appuis sur les fleche
+            videos.currentTime=videos.currentTime+10;
+            break;
             
-        }   
-        if(x==40){
+        case keyCodeName.keyArrowUp:
+            sangRange.value=parseInt(sangRange.value)+10;
+            volumeVideo();
+            break;
+
+        case keyCodeName.keyArrowDown:
             sangRange.value=sangRange.value-10;
             volumeVideo();
-            console.log(sangRange.value);
-        }
-        if(x==77){
+            break;
 
-        if(videos.muted){
-            videos.muted=false;
+        case keyCodeName.keyM:
+            if(videos.muted) videos.muted = false;
+            else videos.muted = true;
+            break;
 
-        }else{
-            videos.muted=true;
-        }
-        }
-        if(x==70){ //pour mettre en plan ecran quand en appuis sur F
-            if(i==1){
+            //pour mettre en plan ecran quand en appuis sur F
+        case keyCodeName.keyF:
+            if(!fullScreen){
                 sockVideos.requestFullscreen();
-                i=2;
-                console.log(i);
-            }else if(i==2){
-                i=1;
+                fullScreen = true;
+            }else{
+                fullScreen = false;
                 document.exitFullscreen();
-                console.log(i);
             }
+            break;
+
+        default:
+          // code block
+      }
+}
+    
+
         
-     }})
+
      
